@@ -32,6 +32,7 @@ class Preprocess:
         # df['studentAnswerRate'] = df['answerCode'].apply(answer_rate)
         df['Elapsed'] = df['Timestamp'].apply(calculate_elapsed)
         df['testConsecutive'] = df['testId'].apply(test_consecutive)
+        df.drop('Timestamp', axis=1, inplace=True)
 
         return df
 
@@ -60,9 +61,11 @@ def answer_rate(lst):
     return len(answers[answers == 1]) / len(answers)
 
 
-def timedelta2float(td):
-
+def timedelta2float(td, tshold=86400):
+    
     res = td.microseconds/float(1000000) + (td.seconds + td.days * 24 * 3600)
+    if tshold:
+        if res > tshold: res = 0
     return res
 
 
@@ -70,9 +73,9 @@ def calculate_elapsed_timedelta(lst):
     
     return [0.] + [timedelta2float(lst[i+1] - lst[i]) for i, _ in enumerate(lst[:-1])]
 
-def calculate_elapsed(lst):
+def calculate_elapsed(lst, tshold=86400):
 
-    return [0.] + [lst[i+1] - lst[i] for i, _ in enumerate(lst[:-1])]
+    return [0.] + [(lst[i+1] - lst[i])*(lst[i+1] - lst[i] < tshold) for i, _ in enumerate(lst[:-1])]
 
 
 def test_consecutive(lst):
